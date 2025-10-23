@@ -1,0 +1,7 @@
+setwd("D:/AZ/als_apoe")
+message("\n===== Running pipeline =====\n")
+message("\n===== Step 1: Extracting APOE status from genomics data =====\n")
+source("scripts/1.apoe_status_extraction.R")
+message("\n===== Step 2: Running ML on somascan data =====\n")
+source("scripts/2.ML_somascan.R")
+message("\n===== Job Done =====\n")
