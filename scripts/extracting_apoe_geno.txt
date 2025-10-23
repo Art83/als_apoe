@@ -1,0 +1,2 @@
+bcftools query -r chr19:44908684 -f '%CHROM\t%POS[\t%GT]\n' -H ALS.chr19.vcf.gz > rs429358.genotypes.tsv
+bcftools query -r chr19:44908822 -f '%CHROM\t%POS[\t%GT]\n' -H ALS.chr19.vcf.gz > rs7412.genotypes.tsv
