@@ -49,8 +49,13 @@ mi_scores <- furrr::future_map_dfr(
   .options = furrr::furrr_options(seed = TRUE)
 )
 
+
 mi_scores <- mi_scores[order(mi_scores$importance,decreasing = T),]
-mi_scores_not_zero <- mi_scores[mi_scores$importance > 0, ]      
+mi_scores_not_zero <- mi_scores[mi_scores$importance > 0, ] 
+
+
+# Sorted MI scores (descending)
+mi_scores <- mi_scores[order(mi_scores$importance, decreasing = TRUE), ]
 best <- mi_scores_not_zero$attributes[mi_scores_not_zero$importance > 0.3]
 
 
@@ -117,10 +122,10 @@ metrics_all <- list(
   SD = sd(model$resample$ROC)
 )
 
-jsonlite::write_json(metrics_all, "output/final_test_metrics_somascan.json", pretty = TRUE)
-jsonlite::write_json(model$bestTune, "output/best_hyperparameters_somascan.json", pretty = TRUE)
+jsonlite::write_json(metrics_all, "output/somascan/final_ML_test_metrics_somascan.json", pretty = TRUE)
+jsonlite::write_json(model$bestTune, "output/somascan/ML_best_hyperparameters_somascan.json", pretty = TRUE)
 
 # Save feature importances
 importance <- varImp(model)$importance
 importance$Feature <- rownames(importance)
-write.csv(importance, "proc/feature_importance_somascan.csv", row.names = FALSE)
+write.csv(importance, "output/somascan/feature_importance_somascan.csv", row.names = FALSE)
