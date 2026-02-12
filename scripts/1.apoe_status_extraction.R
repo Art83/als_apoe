@@ -1,19 +1,20 @@
+
+
+# The script for preparing supplementary tables and data
+
 # Step 1. Extracting the APOE status from genomics data
-
-
 # Genotypes for further analysis below were extracted in bash via:
 # bcftools query -r chr19:44908684 -f '%CHROM\t%POS[\t%GT]\n' -H ALS.chr19.vcf.gz > rs429358.genotypes.tsv
 # bcftools query -r chr19:44908822 -f '%CHROM\t%POS[\t%GT]\n' -H ALS.chr19.vcf.gz > rs7412.genotypes.tsv
 
 
-
-setwd("D:/AZ/als_apoe/")
+library(here)
 
 # Read the files
-rs429358 <- read.csv("proc/rs429358.genotypes.tsv", sep='\t', header = TRUE, stringsAsFactors = FALSE, check.names = F)
-rs7412   <- read.csv("proc/rs7412.genotypes.tsv",sep='\t', header = TRUE, stringsAsFactors = FALSE, check.names = F)
+rs429358 <- read.csv(paste0(here(), "/proc/rs429358.genotypes.tsv"), sep='\t', header = TRUE, stringsAsFactors = FALSE, check.names = F)
+rs7412   <- read.csv(paste0(here(), "/proc/rs7412.genotypes.tsv"),sep='\t', header = TRUE, stringsAsFactors = FALSE, check.names = F)
+meta <- read.csv(paste0(here(), "/raw/als-metadata/answerals/aals_dataportal_datatable.csv"))
 
-meta <- read.csv("raw/als-metadata/answerals/aals_dataportal_datatable.csv")
 meta_sbs <- meta[,c("Participant_ID", "NYGC_CGND_ID")]
 
 
@@ -27,7 +28,7 @@ colnames(gts_429358) <- gsub("^\\[[0-9]+\\]|-b38(?=:GT)|:GT$", "", colnames(gts_
 colnames(gts_7412) <- gsub("^\\[[0-9]+\\]|-b38(?=:GT)|:GT$", "", colnames(gts_7412), perl = TRUE)
 
 
-# Transpose so samples are rows
+# Putting all in one table
 gts_429358 <- t(gts_429358)
 gts_7412   <- t(gts_7412)
 
@@ -35,7 +36,7 @@ if(!all(rownames(gts_429358) == rownames(gts_7412))){
   stop("Samples in datasets don't match")
 }
 
-# Put into a data frame with sample names
+-
 geno_df <- data.frame(
   NYGC_CGND_ID = rownames(gts_429358),
   rs429358 = gts_429358,
@@ -55,19 +56,19 @@ geno_df_apoe <- geno_df %>%
                              rs429358 == "1/1" & rs7412 == "0/0" ~ "44"))
 
 
-write.csv(geno_df_apoe, "proc/apoe_status1.csv", row.names = F)
+write.csv(geno_df_apoe, "proc/apoe_status.csv", row.names = F)
 
 
-demo <- read.csv("raw/als-metadata/answerals/clinical/Demographics.csv")
-apoe_vars <- read.csv("proc/apoe_status.csv")
-
+demo <- read.csv(paste0(here(), "/raw/als-metadata/answerals/clinical/Demographics.csv"))
 
 
 meta <- meta %>%
   select(Participant_ID, NYGC_CGND_ID, SEX, SUBJECT_GROUP,REVISED_EL_ESCORIAL_CRITERIA) %>%
-  inner_join(apoe_vars[,c("NYGC_CGND_ID", "variant")], by="NYGC_CGND_ID") %>%
+  inner_join(geno_df_apoe[,c("NYGC_CGND_ID", "variant")], by="NYGC_CGND_ID") %>%
   inner_join(demo[,c("Participant_ID", "age")], by="Participant_ID") %>%
   mutate(apoe_status = ifelse(variant %in% c("24", "34", "44"), "APOE4+", "APOE4-") ) %>%
   rename(sex= SEX)
 
-write.csv(meta, "proc/meta1.csv", row.names = F)
+write.csv(meta, "proc/meta.csv", row.names = F)
+
+message("Overall number of samples is:", nrow(meta))
